@@ -19,7 +19,7 @@ cd rwkv-cpp-server
 ### Download libtorch
 Download libtorch with `curl -O https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.0.0%2Bcpu.zip` and unzip it to source folder.
 ### Download onnxruntime
-Download [onnxruntime](https://github.com/microsoft/onnxruntime/releases/download/v1.14.1/Microsoft.ML.OnnxRuntime.DirectML.1.14.1.zip) and unzip it to source folder.
+[Download onnxruntime](https://github.com/microsoft/onnxruntime/releases/download/v1.14.1/Microsoft.ML.OnnxRuntime.DirectML.1.14.1.zip) and unzip it to source folder.
 ### Compile
 Run `build.bat`.Release dir path is `build/release`,it contains the `rwkv-server.exe` and all dependence.
 
