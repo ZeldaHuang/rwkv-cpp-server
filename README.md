@@ -5,7 +5,7 @@ This project enable rwkv model running on windows with C++(**CPU only**).You can
 - support libtorch and onnxruntime inference
 - support server api by [chttplib](https://github.com/yhirose/cpp-httplib)
 - provide model convert script to convert rwkv checkpoint to torchscript/onnx file
-- provide client and server release file to use from scrath
+- provide client and server release file to use from scratch
 ## Build from source
 ### Prerequisite
 - Visual Studio 2022
