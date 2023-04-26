@@ -1,6 +1,6 @@
 #include "rwkv_onnx.h"
 
-RWKVONNX::RWKVONNX(std::string path): env(ORT_LOGGING_LEVEL_ERROR, "rwkv_onnx"), session_{env, std::wstring(path.begin(), path.end()).c_str(), Ort::SessionOptions{nullptr}}
+RWKVONNX::RWKVONNX(std::string path) : env(ORT_LOGGING_LEVEL_ERROR, "rwkv_onnx"), session_{env, std::wstring(path.begin(), path.end()).c_str(), Ort::SessionOptions{nullptr}}
 {
 
     Ort::TypeInfo state_type_info = session_.GetInputTypeInfo(1);
@@ -21,7 +21,7 @@ std::tuple<torch::Tensor, torch::Tensor> RWKVONNX::forward(torch::Tensor x, torc
 {
     x = x.to(torch::kInt64);
     state = state.to(torch::kFloat32);
-    if (true)
+    if (x.size(0) == 1)
     {
         return this->forward_single_token(x, state);
     }
@@ -43,7 +43,7 @@ std::tuple<torch::Tensor, torch::Tensor> RWKVONNX::forward_single_token(torch::T
     Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(
         OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
     Ort::Value input_tokens_tensor = Ort::Value::CreateTensor<int64_t>(memory_info, x.data<int64_t>(), input_tokens_shape_[0],
-                                                                        input_tokens_shape_.data(), input_tokens_shape_.size());
+                                                                       input_tokens_shape_.data(), input_tokens_shape_.size());
     // onnx input_tensor
     assert(input_tokens_tensor.IsTensor());
     std::vector<Ort::Value> input_tensor;
@@ -51,7 +51,7 @@ std::tuple<torch::Tensor, torch::Tensor> RWKVONNX::forward_single_token(torch::T
 
     size_t state_size = state_shape_[0] * state_shape_[1];
     Ort::Value input_state_tensor = Ort::Value::CreateTensor<float>(memory_info, state.data<float>(), state_size,
-                                                                        state_shape_.data(), state_shape_.size());
+                                                                    state_shape_.data(), state_shape_.size());
     assert(input_state_tensor.IsTensor());
     input_tensor.push_back(std::move(input_state_tensor));
     // onnx output_tensor
