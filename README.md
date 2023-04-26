@@ -11,7 +11,11 @@ This project enable rwkv model running on windows with C++(**CPU only**).You can
 - Visual Studio 2022
 - cmake(version>=3.0)
 - [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
-
+### Clone the repo
+```
+git clone --recursive https://github.com/ZeldaHuang/rwkv-cpp-server.git
+cd rwkv-cpp-server
+```
 ### Download libtorch
 Download libtorch with `curl -O https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.0.0%2Bcpu.zip` and unzip it to source folder.
 ### Download onnxruntime
