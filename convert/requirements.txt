@@ -1,0 +1,5 @@
+rwkv
+torch
+numpy
+requests
+tkinter
