@@ -9,7 +9,7 @@ class RWKVTorch : public torch::nn::Module,public RWKVInterface
 public:
     RWKVTorch(int dims, int layers, int headsize);
 
-    RWKVTorch(std::string path, c10::ScalarType dtype, c10::ScalarType runtime_dtype);
+    RWKVTorch(std::string path, c10::ScalarType dtype, c10::ScalarType runtime_dtype, torch::Device device);
 
     std::tuple<torch::Tensor, torch::Tensor> forward(torch::Tensor x, torch::Tensor state) override;
     

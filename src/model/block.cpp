@@ -21,7 +21,7 @@ Block::Block(int dims)
     ffn_time_mix_r = torch::zeros({dims});
 }
 
-Block::Block(int i, torch::jit::script::Module w, c10::ScalarType dtype, c10::ScalarType runtime_dtype)
+Block::Block(int i, torch::jit::script::Module w, c10::ScalarType dtype, c10::ScalarType runtime_dtype, torch::Device device)
 {
     int dims = w.attr("blocks." + std::to_string(i) + ".att.key.weight").toTensor().size(0);
     ln1 = torch::nn::LayerNorm(torch::nn::LayerNormOptions({dims}));
@@ -33,26 +33,27 @@ Block::Block(int i, torch::jit::script::Module w, c10::ScalarType dtype, c10::Sc
     ffn_key = torch::nn::Linear(dims, dims * 4);
     ffn_value = torch::nn::Linear(dims * 4, dims);
     ffn_receptance = torch::nn::Linear(dims, dims);
-    time_first = w.attr("blocks." + std::to_string(i) + ".att.time_first").toTensor().squeeze().to(runtime_dtype);
-    time_decay = w.attr("blocks." + std::to_string(i) + ".att.time_decay").toTensor().squeeze().exp().neg().to(runtime_dtype);
+    time_first = w.attr("blocks." + std::to_string(i) + ".att.time_first").toTensor().squeeze().to(runtime_dtype).to(device);
+    time_decay = w.attr("blocks." + std::to_string(i) + ".att.time_decay").toTensor().squeeze().exp().neg().to(runtime_dtype).to(device);
 
-    att_time_mix_k = w.attr("blocks." + std::to_string(i) + ".att.time_mix_k").toTensor().squeeze().to(runtime_dtype);
-    att_time_mix_v = w.attr("blocks." + std::to_string(i) + ".att.time_mix_v").toTensor().squeeze().to(runtime_dtype);
-    att_time_mix_r = w.attr("blocks." + std::to_string(i) + ".att.time_mix_r").toTensor().squeeze().to(runtime_dtype);
-    ffn_time_mix_k = w.attr("blocks." + std::to_string(i) + ".ffn.time_mix_k").toTensor().squeeze().to(runtime_dtype);
-    ffn_time_mix_r = w.attr("blocks." + std::to_string(i) + ".ffn.time_mix_r").toTensor().squeeze().to(runtime_dtype);
+    att_time_mix_k = w.attr("blocks." + std::to_string(i) + ".att.time_mix_k").toTensor().squeeze().to(runtime_dtype).to(device);
+    att_time_mix_v = w.attr("blocks." + std::to_string(i) + ".att.time_mix_v").toTensor().squeeze().to(runtime_dtype).to(device);
+    att_time_mix_r = w.attr("blocks." + std::to_string(i) + ".att.time_mix_r").toTensor().squeeze().to(runtime_dtype).to(device);
+    ffn_time_mix_k = w.attr("blocks." + std::to_string(i) + ".ffn.time_mix_k").toTensor().squeeze().to(runtime_dtype).to(device);
+    ffn_time_mix_r = w.attr("blocks." + std::to_string(i) + ".ffn.time_mix_r").toTensor().squeeze().to(runtime_dtype).to(device);
 
-    ln1->weight = w.attr("blocks." + std::to_string(i) + ".ln1.weight").toTensor().squeeze().to(runtime_dtype);
-    ln1->bias = w.attr("blocks." + std::to_string(i) + ".ln1.bias").toTensor().squeeze().to(runtime_dtype);
-    ln2->weight = w.attr("blocks." + std::to_string(i) + ".ln2.weight").toTensor().squeeze().to(runtime_dtype);
-    ln2->bias = w.attr("blocks." + std::to_string(i) + ".ln2.bias").toTensor().squeeze().to(runtime_dtype);
-    att_key->weight = w.attr("blocks." + std::to_string(i) + ".att.key.weight").toTensor().squeeze().to(dtype).t();
+    ln1->weight = w.attr("blocks." + std::to_string(i) + ".ln1.weight").toTensor().squeeze().to(runtime_dtype).to(device);
+    ln1->bias = w.attr("blocks." + std::to_string(i) + ".ln1.bias").toTensor().squeeze().to(runtime_dtype).to(device);
+    ln2->weight = w.attr("blocks." + std::to_string(i) + ".ln2.weight").toTensor().squeeze().to(runtime_dtype).to(device);
+    ln2->bias = w.attr("blocks." + std::to_string(i) + ".ln2.bias").toTensor().squeeze().to(runtime_dtype).to(device);
+    att_key->weight = w.attr("blocks." + std::to_string(i) + ".att.key.weight").toTensor().squeeze().to(dtype).to(device).t();
     att_value->weight = w.attr("blocks." + std::to_string(i) + ".att.value.weight").toTensor().squeeze().to(dtype).t();
-    att_receptance->weight = w.attr("blocks." + std::to_string(i) + ".att.receptance.weight").toTensor().squeeze().to(dtype).t();
-    att_out->weight = w.attr("blocks." + std::to_string(i) + ".att.output.weight").toTensor().squeeze().to(dtype).t();
-    ffn_key->weight = w.attr("blocks." + std::to_string(i) + ".ffn.key.weight").toTensor().squeeze().to(dtype).t();
-    ffn_value->weight = w.attr("blocks." + std::to_string(i) + ".ffn.value.weight").toTensor().squeeze().to(dtype).t();
-    ffn_receptance->weight = w.attr("blocks." + std::to_string(i) + ".ffn.receptance.weight").toTensor().squeeze().to(dtype).t();
+    att_receptance->weight = w.attr("blocks." + std::to_string(i) + ".att.receptance.weight").toTensor().squeeze().to(dtype).to(device).t();
+    att_out->weight = w.attr("blocks." + std::to_string(i) + ".att.output.weight").toTensor().squeeze().to(dtype).to(device).t();
+    ffn_key->weight = w.attr("blocks." + std::to_string(i) + ".ffn.key.weight").toTensor().squeeze().to(dtype).to(device).t();
+    ffn_value->weight = w.attr("blocks." + std::to_string(i) + ".ffn.value.weight").toTensor().squeeze().to(dtype).to(device).t();
+    ffn_receptance->weight = w.attr("blocks." + std::to_string(i) + ".ffn.receptance.weight").toTensor().squeeze().to(dtype).to(device).t();
+
 
     dtype_ = dtype;
     runtime_dtype_ = runtime_dtype;

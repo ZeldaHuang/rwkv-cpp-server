@@ -12,23 +12,42 @@ void tokenizer_test()
     std::string output_str = t.decodeTokens(input_tokens);
     std::cout << "done: " << output_str << std::endl;
 }
-void speed_test(RWKVTorch &rwkv)
+void speed_test()
 {
+    torch::Device device = torch::kCPU;
+    std::cout << "CUDA DEVICE COUNT: " << torch::cuda::device_count() << std::endl;
+    if (torch::cuda::is_available()) {
+        std::cout << "CUDA is available! Inference on GPU." << std::endl;
+        device = torch::kCUDA;
+    }
+    auto path = "./assets/models/rwkv_1.5b_eng.pt";
+    // Convert to torch dtype
+    auto torch_dtype = torch::kFloat32;
+    auto torch_runtimedtype = torch::kFloat32;
+    torch::NoGradGuard no_grad;
+    RWKVTorch rwkv(path, torch_dtype, torch_runtimedtype, device);
     // warm up
     for (int i = 0; i < 10; i++)
     {
-        rwkv.forward(torch::zeros(1).to(torch::kInt32), rwkv.empty_state_.clone());
+        rwkv.forward(torch::zeros(1).to(torch::kInt32).to(device), rwkv.empty_state_.clone());
     }
     std::cout << "finisn warmup" << std::endl;
     torch::Tensor x;
     torch::Tensor state;
     auto time = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < 1; ++i)
+    for (int i = 0; i < 10; ++i)
     {
-        std::tie(x, state) = rwkv.forward(torch::ones(100).to(torch::kInt32) * 178, rwkv.empty_state_.clone());
+        std::tie(x, state) = rwkv.forward(torch::ones(100).to(torch::kInt32).to(device) * 178, rwkv.empty_state_.clone());
     }
     auto time2 = std::chrono::high_resolution_clock::now();
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time).count() / 10 << "ms / 100 tokens" << std::endl;
+    std::cout << "sequence inference Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time).count() / 10 << "ms / 100 tokens" << std::endl;
+    auto time3 = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < 100; ++i)
+    {
+        std::tie(x, state) = rwkv.forward(torch::ones(1).to(torch::kInt32).to(device) * 178, rwkv.empty_state_.clone());
+    }
+    auto time4 = std::chrono::high_resolution_clock::now();
+    std::cout << "single token inference Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(time4 - time3).count() / 100 << "ms / token" << std::endl;
 }
 
 void onnx_test()
@@ -143,7 +162,8 @@ int main(int argc, char *argv[])
         std::cout << "No port specified, default 5000" << std::endl;
         port = "5000";
     }
-    start_server(model_path, ip, std::stoi(port));
+    // start_server(model_path, ip, std::stoi(port));
+    speed_test();
     // tokenizer_test();
     // onnx_test();
 }

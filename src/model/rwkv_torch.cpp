@@ -13,32 +13,32 @@ RWKVTorch::RWKVTorch(int dims, int layers, int headsize)
     this->eval();
 }
 
-RWKVTorch::RWKVTorch(std::string path, c10::ScalarType dtype, c10::ScalarType runtime_dtype)
+RWKVTorch::RWKVTorch(std::string path, c10::ScalarType dtype, c10::ScalarType runtime_dtype, torch::Device device)
 {
     torch::jit::script::Module w = torch::jit::load(path);
     head = torch::nn::Linear(w.attr("head.weight").toTensor().sizes()[1], w.attr("head.weight").toTensor().sizes()[0]);
-    head->weight = w.attr("head.weight").toTensor().to(dtype);
+    head->weight = w.attr("head.weight").toTensor().to(dtype).to(device);
     ln_in = torch::nn::LayerNorm(torch::nn::LayerNormOptions({w.attr("blocks.0.ln0.bias").toTensor().sizes()[0]}));
-    ln_in->bias = w.attr("blocks.0.ln0.bias").toTensor().to(runtime_dtype);
-    ln_in->weight = w.attr("blocks.0.ln0.weight").toTensor().to(runtime_dtype);
+    ln_in->bias = w.attr("blocks.0.ln0.bias").toTensor().to(runtime_dtype).to(device);
+    ln_in->weight = w.attr("blocks.0.ln0.weight").toTensor().to(runtime_dtype).to(device);
     ln_out = torch::nn::LayerNorm(torch::nn::LayerNormOptions({w.attr("ln_out.weight").toTensor().sizes()[0]}));
-    ln_out->weight = w.attr("ln_out.weight").toTensor().to(runtime_dtype);
-    ln_out->bias = w.attr("ln_out.bias").toTensor().to(runtime_dtype);
+    ln_out->weight = w.attr("ln_out.weight").toTensor().to(runtime_dtype).to(device);
+    ln_out->bias = w.attr("ln_out.bias").toTensor().to(runtime_dtype).to(device);
     emb = torch::nn::Embedding(w.attr("emb.weight").toTensor().sizes()[0], w.attr("emb.weight").toTensor().sizes()[1]);
-    emb->weight = w.attr("emb.weight").toTensor().to(runtime_dtype);
+    emb->weight = w.attr("emb.weight").toTensor().to(runtime_dtype).to(device);
 
     for (int i = 0; i < 100; i++)
     {
         if (w.hasattr("blocks." + std::to_string(i) + ".ln1.bias"))
         {
-            blocks.push_back(Block(i, w, dtype, runtime_dtype));
+            blocks.push_back(Block(i, w, dtype, runtime_dtype,device));
         }
         else
         {
             break;
         }
     }
-    empty_state_ = w.attr("emptyState").toTensor().to(runtime_dtype);
+    empty_state_ = w.attr("emptyState").toTensor().to(runtime_dtype).to(device);
     dtype_ = dtype;
     this->eval();
 }

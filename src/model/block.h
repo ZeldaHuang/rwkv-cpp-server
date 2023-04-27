@@ -11,7 +11,7 @@ class Block : public torch::nn::Module
 public:
     Block(int dims);
 
-    Block(int i, torch::jit::script::Module w, c10::ScalarType dtype, c10::ScalarType runtime_dtype);
+    Block(int i, torch::jit::script::Module w, c10::ScalarType dtype, c10::ScalarType runtime_dtype, torch::Device device);
 
     torch::Tensor FF_seq(torch::Tensor x, torch::Tensor state, torch::Tensor time_mix_k, torch::Tensor time_mix_r, torch::Tensor kw, torch::Tensor vw, torch::Tensor rw);
 
