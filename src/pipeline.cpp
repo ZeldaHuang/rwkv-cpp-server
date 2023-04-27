@@ -3,7 +3,13 @@
 RWKVPipeline::RWKVPipeline(std::string &model_path, std::string &tokenizer_path, std::string model_type) : tokenizer_(tokenizer_path)
 {
     if(model_type=="libtorch"){
-        model_ptr_ = std::make_shared<RWKVTorch>(model_path, torch::kFloat32, torch::kFloat32);
+        torch::Device device = torch::kCPU;
+        std::cout << "CUDA DEVICE COUNT: " << torch::cuda::device_count() << std::endl;
+        if (torch::cuda::is_available()) {
+            std::cout << "CUDA is available! Inference on GPU." << std::endl;
+            device = torch::kCUDA;
+        }
+        model_ptr_ = std::make_shared<RWKVTorch>(model_path, torch::kFloat32, torch::kFloat32, device);
     }
     else{
         model_ptr_ = std::make_shared<RWKVONNX>(model_path);
