@@ -3,13 +3,12 @@
 RWKVPipeline::RWKVPipeline(std::string &model_path, std::string &tokenizer_path, std::string model_type) : tokenizer_(tokenizer_path)
 {
     if(model_type=="libtorch"){
-        torch::Device device = torch::kCPU;
         std::cout << "CUDA DEVICE COUNT: " << torch::cuda::device_count() << std::endl;
         if (torch::cuda::is_available()) {
             std::cout << "CUDA is available! Inference on GPU." << std::endl;
-            device = torch::kCUDA;
+            device_ = torch::kCUDA;
         }
-        model_ptr_ = std::make_shared<RWKVTorch>(model_path, torch::kFloat32, torch::kFloat32, device);
+        model_ptr_ = std::make_shared<RWKVTorch>(model_path, torch::kFloat32, torch::kFloat32, device_);
     }
     else{
         model_ptr_ = std::make_shared<RWKVONNX>(model_path);
@@ -44,7 +43,7 @@ std::string RWKVPipeline::generate(std::string &context, float temperature, floa
     torch::Tensor state = prev_state_.clone();
     torch::Tensor last_out;
     std::map<uint32_t, uint32_t> occurrence;
-    torch::Tensor t = torch::from_blob(input_tokens.data(), {(int)input_tokens.size()}, opts);
+    torch::Tensor t = torch::from_blob(input_tokens.data(), {(int)input_tokens.size()}, opts).to(device_);
     std::tie(last_out, state) = model_ptr_->forward(t, state);
     std::vector<uint32_t> output_tokens;
     for (int i = 0; i < token_count; ++i)
@@ -68,7 +67,7 @@ std::string RWKVPipeline::generate(std::string &context, float temperature, floa
         }
         occurrence[tok]++;
         output_tokens.push_back(tok);
-        t = torch::tensor({(int)tok}).to(torch::kInt32);
+        t = torch::tensor({(int)tok}).to(torch::kInt32).to(device_);
         std::tie(last_out, state) = model_ptr_->forward(t, state);
     }
     prev_state_ = state;

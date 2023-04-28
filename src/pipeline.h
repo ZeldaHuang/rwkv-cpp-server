@@ -19,4 +19,5 @@ private:
     std::shared_ptr<RWKVInterface> model_ptr_;
     RWKVTokenizer tokenizer_;
     torch::Tensor prev_state_;
+    torch::Device device_ = torch::kCPU;
 };

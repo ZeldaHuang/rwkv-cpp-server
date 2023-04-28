@@ -47,7 +47,7 @@ Block::Block(int i, torch::jit::script::Module w, c10::ScalarType dtype, c10::Sc
     ln2->weight = w.attr("blocks." + std::to_string(i) + ".ln2.weight").toTensor().squeeze().to(runtime_dtype).to(device);
     ln2->bias = w.attr("blocks." + std::to_string(i) + ".ln2.bias").toTensor().squeeze().to(runtime_dtype).to(device);
     att_key->weight = w.attr("blocks." + std::to_string(i) + ".att.key.weight").toTensor().squeeze().to(dtype).to(device).t();
-    att_value->weight = w.attr("blocks." + std::to_string(i) + ".att.value.weight").toTensor().squeeze().to(dtype).t();
+    att_value->weight = w.attr("blocks." + std::to_string(i) + ".att.value.weight").toTensor().squeeze().to(dtype).to(device).t();
     att_receptance->weight = w.attr("blocks." + std::to_string(i) + ".att.receptance.weight").toTensor().squeeze().to(dtype).to(device).t();
     att_out->weight = w.attr("blocks." + std::to_string(i) + ".att.output.weight").toTensor().squeeze().to(dtype).to(device).t();
     ffn_key->weight = w.attr("blocks." + std::to_string(i) + ".ffn.key.weight").toTensor().squeeze().to(dtype).to(device).t();

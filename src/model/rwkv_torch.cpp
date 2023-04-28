@@ -18,7 +18,7 @@ RWKVTorch::RWKVTorch(std::string path, c10::ScalarType dtype, c10::ScalarType ru
     torch::jit::script::Module w = torch::jit::load(path);
     head = torch::nn::Linear(w.attr("head.weight").toTensor().sizes()[1], w.attr("head.weight").toTensor().sizes()[0]);
     head->weight = w.attr("head.weight").toTensor().to(dtype).to(device);
-    head->bias = head->bias.zero_();
+    head->bias = head->bias.zero_().to(device);
     ln_in = torch::nn::LayerNorm(torch::nn::LayerNormOptions({w.attr("blocks.0.ln0.bias").toTensor().sizes()[0]}));
     ln_in->bias = w.attr("blocks.0.ln0.bias").toTensor().to(runtime_dtype).to(device);
     ln_in->weight = w.attr("blocks.0.ln0.weight").toTensor().to(runtime_dtype).to(device);
