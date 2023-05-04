@@ -1,6 +1,6 @@
 
 # rwkv-cpp-server
-This project enable rwkv model running on windows with C++(**CPU only**).You can run your own rwkv model service without any python dependence(just click a exe file). It provides following features:
+This project enable rwkv model running on windows with C++(**CPU/GPU**).You can run your own rwkv model service without any python dependence(just click a exe file). It provides following features:
 - support c tokenizer
 - support libtorch and onnxruntime inference
 - support server api by [chttplib](https://github.com/yhirose/cpp-httplib)
