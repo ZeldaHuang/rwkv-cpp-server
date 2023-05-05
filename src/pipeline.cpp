@@ -24,7 +24,7 @@ uint32_t RWKVPipeline::sample_logits(torch::Tensor logits, float temperature=1.0
     sorted_probs = torch::flip(sorted_probs, {0});
     auto cumulative_probs = torch::cumsum(sorted_probs, -1);
     // cumulative_probs = cumulative_probs.masked_fill(cumulative_probs < top_p, 0.0);
-    auto cutoff = sorted_probs[torch::argmax((cumulative_probs > top_p).to(torch::kInt32))];
+    auto cutoff = sorted_probs[torch::argmax((cumulative_probs > top_p).to(torch::kInt32))].to(torch::kFloat32);
     probs = probs.masked_fill(probs < cutoff, 0.0);
     if (top_k < probs.size(0) && top_k > 0) {
         probs.index({sorted_ids.slice(0, -top_k)}) = 0;

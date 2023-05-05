@@ -72,12 +72,12 @@ void onnx_test()
     torch::Tensor state;
     for (int i = 0; i < 10; ++i)
     {
-        onnx_model.forward(torch::ones(1).to(torch::kInt64) * 178, onnx_model.empty_state_.clone());
+        onnx_model.forward(torch::ones(1).to(torch::kInt32) * 178, onnx_model.empty_state_.clone());
     }
     auto time = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < 10; ++i)
     {
-        std::tie(out, state) = onnx_model.forward(torch::ones(100).to(torch::kInt64), onnx_model.empty_state_.clone());
+        std::tie(out, state) = onnx_model.forward(torch::ones(100).to(torch::kInt32), onnx_model.empty_state_.clone());
     }
     auto time2 = std::chrono::high_resolution_clock::now();
     std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time).count() / 10 << "ms / 100 tokens" << std::endl;
@@ -124,7 +124,6 @@ void start_server(std::string &model_path, std::string &ip, int port)
     }
     std::cout << "using model:" << model_path << std::endl;
     RWKVPipeline pipeline = RWKVPipeline(model_path, tokenizer_path, model_type);
-    std::cout<<"inti";
     RWKVServer server = RWKVServer(pipeline);
     server.start(ip, port);
 }
@@ -177,7 +176,15 @@ int main(int argc, char *argv[])
         port = "5000";
     }
     torch::NoGradGuard no_grad;
-    start_server(model_path, ip, std::stoi(port));
+    try
+    {
+        /* code */
+        start_server(model_path, ip, std::stoi(port));
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
     // inference_speed_test(model_path);
     // tokenizer_test();
     // onnx_test();

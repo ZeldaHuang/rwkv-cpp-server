@@ -12,14 +12,13 @@ RWKVONNX::RWKVONNX(std::string path) : env(ORT_LOGGING_LEVEL_ERROR, "rwkv_onnx")
     empty_state_ = torch::zeros({state_shape_[0], state_shape_[1]});
     for (int i = 0; i < state_shape_[0] / 5; ++i)
     {
-        empty_state_[i * 5 + 3] -= 1e30;
+        empty_state_[i * 5 + 4] -= 1e30;
     }
     std::cout << "init onnx model success" << std::endl;
 }
-
 std::tuple<torch::Tensor, torch::Tensor> RWKVONNX::forward(torch::Tensor x, torch::Tensor state)
 {
-    x = x.to(torch::kInt64);
+    x = x.to(torch::kInt32);
     state = state.to(torch::kFloat32);
     if (x.size(0) == 1)
     {
@@ -27,10 +26,10 @@ std::tuple<torch::Tensor, torch::Tensor> RWKVONNX::forward(torch::Tensor x, torc
     }
     else
     {
-        torch::Tensor input_x = torch::empty({1}).to(torch::kInt64);
+        torch::Tensor input_x = torch::empty({1}).to(torch::kInt32);
         torch::Tensor res_x;
         for (int i = 0; i < x.size(0); ++i)
-        {
+        { 
             input_x[0] = x[i];
             std::tie(res_x, state) = this->forward_single_token(input_x, state);
         }
@@ -41,8 +40,8 @@ std::tuple<torch::Tensor, torch::Tensor> RWKVONNX::forward(torch::Tensor x, torc
 std::tuple<torch::Tensor, torch::Tensor> RWKVONNX::forward_single_token(torch::Tensor x, torch::Tensor state)
 {
     Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(
-        OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
-    Ort::Value input_tokens_tensor = Ort::Value::CreateTensor<int64_t>(memory_info, x.data<int64_t>(), input_tokens_shape_[0],
+        OrtAllocatorType::OrtDeviceAllocator, OrtMemType::OrtMemTypeCPU);
+    Ort::Value input_tokens_tensor = Ort::Value::CreateTensor<int32_t>(memory_info, x.data<int32_t>(), input_tokens_shape_[0],
                                                                        input_tokens_shape_.data(), input_tokens_shape_.size());
     // onnx input_tensor
     assert(input_tokens_tensor.IsTensor());
@@ -62,6 +61,5 @@ std::tuple<torch::Tensor, torch::Tensor> RWKVONNX::forward_single_token(torch::T
     // std::cout<<"onnx inference done "<<output_tensor[0]<<std::endl;
     torch::Tensor output_x = torch::from_blob(ort_output[0].GetTensorMutableData<float>(), {output_tokens_shape_[0]});
     torch::Tensor output_state = torch::from_blob(ort_output[1].GetTensorMutableData<float>(), {state_shape_[0], state_shape_[1]});
-
     return std::make_tuple(output_x, output_state);
 }

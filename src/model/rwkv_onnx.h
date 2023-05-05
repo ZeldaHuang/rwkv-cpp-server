@@ -6,7 +6,6 @@
 
 #include <onnxruntime_cxx_api.h>
 #include <onnxruntime_c_api.h>
-
 #include "rwkv_interface.h"
 
 //rwkv onnx model
